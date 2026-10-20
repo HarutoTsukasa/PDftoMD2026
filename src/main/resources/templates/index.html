@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Convertidor local a Markdown</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        .error { color: #b00020; background: #fdecea; padding: .75rem; border-radius: 4px; }
+        textarea { width: 100%; height: 400px; font-family: monospace; font-size: 13px; }
+        .actions { margin: 1rem 0; display: flex; gap: 1rem; }
+    </style>
+</head>
+<body>
+<h1>Convertidor local a Markdown</h1>
+<p>Formatos admitidos: <strong>PDF, DOCX, XLSX, PPTX</strong>. Todo se procesa en esta máquina; no se envía nada a Internet.</p>
+
+<form method="post" action="/convert" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".pdf,.docx,.xlsx,.pptx" required>
+    <button type="submit">Convertir a Markdown</button>
+</form>
+
+<div th:if="${error}" class="error" th:text="${error}"></div>
+
+<div th:if="${markdown}">
+    <h2>Resultado</h2>
+    <form method="post" action="/download">
+        <textarea name="markdown" th:text="${markdown}"></textarea>
+        <input type="hidden" name="filename" th:value="${filename}">
+        <div class="actions">
+            <button type="submit">Descargar .md</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
