@@ -6,11 +6,11 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xslf.usermodel.*;
 import org.docx4j.convert.out.HTMLSettings;
-import org.docx4j.convert.out.html.HtmlExporterNG2;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
+import org.docx4j.Docx4J;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +39,7 @@ public class ConversionService {
 
 	// ---------- PDF ----------
 	private String convertPdf(InputStream in) throws IOException {
-		try (PDDocument doc = Loader.loadPDF(in)) {
+		try (PDDocument doc = Loader.loadPDF(in.readAllBytes())) {
 			PDFTextStripper stripper = new PDFTextStripper();
 			String text = stripper.getText(doc);
 			return "# Texto extraído del PDF\n\n" + text;
@@ -47,15 +47,18 @@ public class ConversionService {
 	}
 
 	// ---------- WORD (.docx) ----------
+	@SuppressWarnings("deprecation")
 	private String convertDocx(InputStream in) throws Exception {
 		WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(in);
 
-		HTMLSettings htmlSettings = new HTMLSettings();
+		// Usar la factoría de Docx4J, no "new HTMLSettings()"
+		HTMLSettings htmlSettings = Docx4J.createHTMLSettings();
 		htmlSettings.setWmlPackage(wordMLPackage);
 
 		ByteArrayOutputStream htmlBytes = new ByteArrayOutputStream();
-		HtmlExporterNG2 exporter = new HtmlExporterNG2();
-		exporter.html(htmlSettings, htmlBytes, null);
+
+		// FLAG_EXPORT_PREFER_XSL es el modo estándar para HTML
+		Docx4J.toHTML(htmlSettings, htmlBytes, Docx4J.FLAG_EXPORT_PREFER_XSL);
 
 		String html = htmlBytes.toString(StandardCharsets.UTF_8.name());
 		return FlexmarkHtmlConverter.builder().build().convert(html);
