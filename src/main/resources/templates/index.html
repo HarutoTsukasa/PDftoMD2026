@@ -1,35 +1,652 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="dark">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Convertidor local a Markdown</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-        .error { color: #b00020; background: #fdecea; padding: .75rem; border-radius: 4px; }
-        textarea { width: 100%; height: 400px; font-family: monospace; font-size: 13px; }
-        .actions { margin: 1rem 0; display: flex; gap: 1rem; }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Convertidor local a Markdown</title>
+	<!-- Bootstrap 5 CSS CDN -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<!-- FontAwesome 6 CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<!-- Google Fonts Inter -->
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+		rel="stylesheet">
+
+	<style>
+		:root {
+			--purple-primary: #6366f1;
+			--purple-hover: #4f46e5;
+			--purple-light: #e0e7ff;
+			--purple-dark: #3730a3;
+			--purple-glow: rgba(99, 102, 241, 0.25);
+			--font-main: 'Inter', system-ui, -apple-system, sans-serif;
+			--font-mono: 'JetBrains Mono', monospace;
+		}
+
+		body {
+			font-family: var(--font-main);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			transition: background-color 0.3s ease, color 0.3s ease;
+		}
+
+		/* Custom Scrollbar */
+		::-webkit-scrollbar {
+			width: 8px;
+			height: 8px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: rgba(99, 102, 241, 0.3);
+			border-radius: 4px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+			background: var(--purple-primary);
+		}
+
+		/* Hero / Header Section */
+		.hero-section {
+			padding: 3.5rem 0 2rem;
+			position: relative;
+		}
+
+		.brand-badge {
+			background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+			border: 1px solid rgba(99, 102, 241, 0.3);
+			color: #818cf8;
+			font-size: 0.85rem;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+			padding: 0.4rem 1rem;
+			border-radius: 50rem;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.text-gradient {
+			background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #3b82f6 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+
+		/* Theme Toggle Button */
+		.theme-toggle-btn {
+			position: fixed;
+			top: 1.25rem;
+			right: 1.25rem;
+			z-index: 1050;
+			width: 44px;
+			height: 44px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: 1px solid rgba(255, 255, 255, 0.15);
+			background: rgba(255, 255, 255, 0.05);
+			backdrop-filter: blur(10px);
+			color: currentColor;
+			transition: all 0.25s ease;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+
+		[data-bs-theme="light"] .theme-toggle-btn {
+			background: rgba(0, 0, 0, 0.05);
+			border-color: rgba(0, 0, 0, 0.1);
+		}
+
+		.theme-toggle-btn:hover {
+			transform: scale(1.08) rotate(15deg);
+			border-color: var(--purple-primary);
+			color: var(--purple-primary);
+		}
+
+		/* Cards and Containers */
+		.custom-card {
+			border-radius: 1.25rem;
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+			transition: all 0.3s ease;
+			overflow: hidden;
+		}
+
+		[data-bs-theme="light"] .custom-card {
+			border-color: rgba(0, 0, 0, 0.08);
+			box-shadow: 0 15px 35px rgba(99, 102, 241, 0.06);
+		}
+
+		/* Drag and Drop Zone */
+		.drop-zone {
+			border: 2px dashed rgba(99, 102, 241, 0.4);
+			border-radius: 1rem;
+			padding: 3rem 2rem;
+			text-align: center;
+			background: rgba(99, 102, 241, 0.02);
+			cursor: pointer;
+			transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+			position: relative;
+		}
+
+		.drop-zone:hover,
+		.drop-zone.dragover {
+			border-color: var(--purple-primary);
+			background: rgba(99, 102, 241, 0.08);
+			transform: translateY(-2px);
+			box-shadow: 0 10px 25px var(--purple-glow);
+		}
+
+		.drop-zone-icon {
+			width: 70px;
+			height: 70px;
+			background: linear-gradient(135deg, var(--purple-primary), #a855f7);
+			color: white;
+			border-radius: 50%;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.75rem;
+			margin-bottom: 1.25rem;
+			box-shadow: 0 8px 20px var(--purple-glow);
+			transition: transform 0.3s ease;
+		}
+
+		.drop-zone:hover .drop-zone-icon {
+			transform: scale(1.1) rotate(-5deg);
+		}
+
+		/* Format Badges */
+		.format-badge {
+			font-size: 0.75rem;
+			font-weight: 700;
+			padding: 0.35rem 0.75rem;
+			border-radius: 0.5rem;
+			background: rgba(255, 255, 255, 0.06);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: currentColor;
+			transition: all 0.2s ease;
+		}
+
+		[data-bs-theme="light"] .format-badge {
+			background: rgba(0, 0, 0, 0.04);
+			border-color: rgba(0, 0, 0, 0.08);
+		}
+
+		.format-badge.pdf {
+			color: #ef4444;
+			border-color: rgba(239, 68, 68, 0.3);
+		}
+
+		.format-badge.docx {
+			color: #3b82f6;
+			border-color: rgba(59, 130, 246, 0.3);
+		}
+
+		.format-badge.xlsx {
+			color: #10b981;
+			border-color: rgba(16, 185, 129, 0.3);
+		}
+
+		.format-badge.pptx {
+			color: #f97316;
+			border-color: rgba(249, 115, 22, 0.3);
+		}
+
+		/* Custom File Input Masking */
+		/* Note: Original input field remains functionally accessible */
+		.native-file-input {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			opacity: 0;
+			cursor: pointer;
+			z-index: 10;
+		}
+
+		/* Selected File Card Indicator */
+		.file-selected-info {
+			display: none;
+			background: rgba(99, 102, 241, 0.1);
+			border: 1px solid rgba(99, 102, 241, 0.3);
+			border-radius: 0.75rem;
+			padding: 1rem;
+			margin-top: 1rem;
+			align-items: center;
+			justify-content: space-between;
+			animation: fadeIn 0.3s ease;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(6px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		/* Buttons */
+		.btn-purple {
+			background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-hover) 100%);
+			color: #ffffff;
+			border: none;
+			font-weight: 600;
+			padding: 0.75rem 1.75rem;
+			border-radius: 0.75rem;
+			box-shadow: 0 4px 15px var(--purple-glow);
+			transition: all 0.25s ease;
+		}
+
+		.btn-purple:hover {
+			color: #ffffff;
+			transform: translateY(-2px);
+			box-shadow: 0 8px 25px var(--purple-glow);
+			background: linear-gradient(135deg, #7073f9 0%, #4338ca 100%);
+		}
+
+		.btn-purple:active {
+			transform: translateY(0);
+		}
+
+		/* Error Banner Customization */
+		.error-card {
+			border-left: 4px solid #dc3545;
+			background: rgba(220, 53, 69, 0.1);
+			border-radius: 0.75rem;
+			padding: 1rem 1.25rem;
+			margin-bottom: 1.5rem;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		/* Textarea Editor */
+		.editor-container {
+			position: relative;
+			border-radius: 0.75rem;
+			overflow: hidden;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+		}
+
+		[data-bs-theme="light"] .editor-container {
+			border-color: rgba(0, 0, 0, 0.15);
+		}
+
+		.editor-toolbar {
+			background: rgba(0, 0, 0, 0.2);
+			padding: 0.6rem 1rem;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			font-size: 0.85rem;
+		}
+
+		[data-bs-theme="light"] .editor-toolbar {
+			background: rgba(0, 0, 0, 0.03);
+			border-bottom-color: rgba(0, 0, 0, 0.08);
+		}
+
+		textarea.markdown-textarea {
+			width: 100%;
+			height: 420px;
+			font-family: var(--font-mono);
+			font-size: 0.9rem;
+			line-height: 1.6;
+			padding: 1.25rem;
+			border: none;
+			outline: none;
+			resize: vertical;
+			background: transparent;
+			color: currentColor;
+		}
+
+		textarea.markdown-textarea:focus {
+			box-shadow: none;
+			outline: none;
+		}
+
+		/* Toast Feedback */
+		.toast-notification {
+			position: fixed;
+			bottom: 2rem;
+			right: 2rem;
+			z-index: 1100;
+			background: var(--purple-primary);
+			color: white;
+			padding: 0.75rem 1.25rem;
+			border-radius: 0.5rem;
+			box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			opacity: 0;
+			transform: translateY(20px);
+			transition: all 0.3s ease;
+			pointer-events: none;
+		}
+
+		.toast-notification.show {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	</style>
 </head>
+
 <body>
-<h1>Convertidor local a Markdown</h1>
-<p>Formatos admitidos: <strong>PDF, DOCX, XLSX, PPTX</strong>. Todo se procesa en esta máquina; no se envía nada a Internet.</p>
 
-<form method="post" action="/convert" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".pdf,.docx,.xlsx,.pptx" required>
-    <button type="submit">Convertir a Markdown</button>
-</form>
+	<!-- Dark / Light Mode Toggle Button -->
+	<button type="button" class="theme-toggle-btn" id="themeToggle" title="Cambiar tema">
+		<i class="fa-solid me-0 fa-moon" id="themeIcon"></i>
+	</button>
 
-<div th:if="${error}" class="error" th:text="${error}"></div>
+	<!-- Main Container -->
+	<div class="container max-width-lg py-4 flex-grow-1">
 
-<div th:if="${markdown}">
-    <h2>Resultado</h2>
-    <form method="post" action="/download">
-        <textarea name="markdown" th:text="${markdown}"></textarea>
-        <input type="hidden" name="filename" th:value="${filename}">
-        <div class="actions">
-            <button type="submit">Descargar .md</button>
-        </div>
-    </form>
-</div>
+		<!-- Header / Hero Section -->
+		<header class="hero-section text-center mb-4">
+			<div class="brand-badge mb-3">
+				<i class="fa-solid fa-shield-halved"></i>
+				<span>100% Procesamiento Local y Seguro</span>
+			</div>
+			<h1 class="display-5 fw-bold mb-3">Convertidor local a <span class="text-gradient">Markdown</span></h1>
+			<p class="text-secondary lead mx-auto" style="max-width: 650px; font-size: 1.05rem;">
+				Formatos admitidos: <strong>PDF, DOCX, XLSX, PPTX</strong>. Todo se procesa en esta máquina; no se envía
+				nada a Internet.
+			</p>
+		</header>
+
+		<!-- Main Converter Card -->
+		<main class="row justify-content-center">
+			<div class="col-lg-10">
+				<div class="card custom-card bg-body-tertiary p-4 p-md-5 mb-4">
+
+					<!-- UPLOAD FORM (Preserving exact form structure, input names, actions and attributes) -->
+					<form method="post" action="/convert" enctype="multipart/form-data" id="uploadForm">
+						<div class="drop-zone" id="dropZone">
+
+							<!-- ORIGINAL EXACT INPUT (Styled transparently over drag zone) -->
+							<input type="file" name="file" accept=".pdf,.docx,.xlsx,.pptx" required
+								class="native-file-input" id="fileInput">
+
+							<div class="drop-zone-icon">
+								<i class="fa-solid fa-cloud-arrow-up"></i>
+							</div>
+
+							<h4 class="fw-semibold mb-2">Arrastra tu archivo aquí o haz clic para explorar</h4>
+							<p class="text-secondary small mb-3">Selecciona un documento de tu equipo para convertirlo
+								instantáneamente</p>
+
+							<div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+								<span class="format-badge pdf"><i class="fa-solid fa-file-pdf me-1"></i>PDF</span>
+								<span class="format-badge docx"><i class="fa-solid fa-file-word me-1"></i>DOCX</span>
+								<span class="format-badge xlsx"><i class="fa-solid fa-file-excel me-1"></i>XLSX</span>
+								<span class="format-badge pptx"><i
+										class="fa-solid fa-file-powerpoint me-1"></i>PPTX</span>
+							</div>
+						</div>
+
+						<!-- Selected File Status Box -->
+						<div class="file-selected-info" id="fileSelectedInfo">
+							<div class="d-flex align-items-center gap-3 overflow-hidden">
+								<div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 fs-4">
+									<i class="fa-solid fa-file-lines" id="fileTypeIcon"></i>
+								</div>
+								<div class="text-truncate">
+									<p class="fw-semibold mb-0 text-truncate" id="fileNameDisplay">
+										nombre_del_archivo.docx</p>
+									<span class="text-secondary small" id="fileSizeDisplay">0 KB</span>
+								</div>
+							</div>
+							<button type="button" class="btn-close ms-2" id="removeFileBtn"
+								aria-label="Quitar archivo"></button>
+						</div>
+
+						<!-- Action Submit Button -->
+						<div class="text-center mt-4">
+							<button type="submit" class="btn btn-purple btn-lg w-100 w-sm-auto" id="submitBtn">
+								<i class="fa-solid fa-bolt me-2"></i>Convertir a Markdown
+							</button>
+						</div>
+					</form>
+
+					<!-- ERROR NOTIFICATION CONTAINER (Preserving exact Thymeleaf directive and element) -->
+					<div th:if="${error}" class="error" th:text="${error}"></div>
+
+					<!-- MARKDOWN RESULT CONTAINER (Preserving exact Thymeleaf structure) -->
+					<div th:if="${markdown}">
+						<hr class="my-5 opacity-10">
+
+						<div class="d-flex align-items-center justify-content-between mb-3">
+							<h2 class="h4 fw-bold mb-0 d-flex align-items-center gap-2">
+								<i class="fa-solid fa-code text-primary"></i>Resultado
+							</h2>
+							<span
+								class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
+								<i class="fa-solid fa-check me-1"></i>Conversión completada
+							</span>
+						</div>
+
+						<form method="post" action="/download">
+							<div class="editor-container mb-3 bg-body">
+								<div class="editor-toolbar">
+									<div class="d-flex align-items-center gap-3 text-secondary">
+										<span id="lineCount"><i class="fa-solid fa-bars me-1"></i>0 Líneas</span>
+										<span id="wordCount"><i class="fa-solid fa-font me-1"></i>0 Palabras</span>
+									</div>
+									<button type="button" class="btn btn-sm btn-outline-secondary border-0" id="copyBtn"
+										title="Copiar al portapapeles">
+										<i class="fa-regular fa-copy me-1"></i>Copiar
+									</button>
+								</div>
+
+								<!-- EXACT TEXTAREA FIELD preserved -->
+								<textarea name="markdown" th:text="${markdown}" class="markdown-textarea"
+									id="markdownArea"
+									placeholder="# Tu contenido convertido aparecerá aquí..."></textarea>
+							</div>
+
+							<!-- EXACT HIDDEN INPUT FIELD preserved -->
+							<input type="hidden" name="filename" th:value="${filename}">
+
+							<div class="actions d-flex gap-2 justify-content-end">
+								<button type="submit" class="btn btn-purple">
+									<i class="fa-solid fa-download me-2"></i>Descargar .md
+								</button>
+							</div>
+						</form>
+					</div>
+
+				</div>
+			</div>
+		</main>
+
+		<!-- Footer -->
+		<footer class="text-center text-secondary small py-3 mt-auto">
+			<p class="mb-0">Convertidor local seguro &bull; Privacidad garantizada sin envío de datos a servidores
+				externos.</p>
+		</footer>
+	</div>
+
+	<!-- Toast UI feedback -->
+	<div class="toast-notification" id="toast">
+		<i class="fa-solid fa-circle-check"></i>
+		<span id="toastMsg">Texto copiado al portapapeles</span>
+	</div>
+
+	<!-- Bootstrap 5 JS Bundle CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/script/bootstrap.bundle.min.js"></script>
+
+	<!-- Custom Interactive JavaScript -->
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			// --- 1. Theme Toggle Logic (Dark / Light) ---
+			const themeToggleBtn = document.getElementById('themeToggle');
+			const themeIcon = document.getElementById('themeIcon');
+			const htmlElement = document.documentElement;
+
+			// Load saved theme or system preference
+			const savedTheme = localStorage.getItem('theme') ||
+				(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+			setTheme(savedTheme);
+
+			themeToggleBtn.addEventListener('click', () => {
+				const currentTheme = htmlElement.getAttribute('data-bs-theme');
+				const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+				setTheme(newTheme);
+			});
+
+			function setTheme(theme) {
+				htmlElement.setAttribute('data-bs-theme', theme);
+				localStorage.setItem('theme', theme);
+				if (theme === 'dark') {
+					themeIcon.className = 'fa-solid fa-sun';
+				} else {
+					themeIcon.className = 'fa-solid fa-moon';
+				}
+			}
+
+			// --- 2. File Upload & Drag and Drop Handling ---
+			const dropZone = document.getElementById('dropZone');
+			const fileInput = document.getElementById('fileInput');
+			const fileSelectedInfo = document.getElementById('fileSelectedInfo');
+			const fileNameDisplay = document.getElementById('fileNameDisplay');
+			const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+			const removeFileBtn = document.getElementById('removeFileBtn');
+			const fileTypeIcon = document.getElementById('fileTypeIcon');
+
+			// Drag effects
+			['dragenter', 'dragover'].forEach(eventName => {
+				dropZone.addEventListener(eventName, (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					dropZone.classList.add('dragover');
+				}, false);
+			});
+
+			['dragleave', 'drop'].forEach(eventName => {
+				dropZone.addEventListener(eventName, (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					dropZone.classList.remove('dragover');
+				}, false);
+			});
+
+			// Handle File Selection
+			fileInput.addEventListener('change', updateFileInfo);
+
+			function updateFileInfo() {
+				if (fileInput.files && fileInput.files[0]) {
+					const file = fileInput.files[0];
+					fileNameDisplay.textContent = file.name;
+					fileSizeDisplay.textContent = formatBytes(file.size);
+
+					// Set Icon based on extension
+					const ext = file.name.split('.').pop().toLowerCase();
+					if (ext === 'pdf') fileTypeIcon.className = 'fa-solid fa-file-pdf text-danger';
+					else if (ext === 'docx') fileTypeIcon.className = 'fa-solid fa-file-word text-primary';
+					else if (ext === 'xlsx') fileTypeIcon.className = 'fa-solid fa-file-excel text-success';
+					else if (ext === 'pptx') fileTypeIcon.className = 'fa-solid fa-file-powerpoint text-warning';
+					else fileTypeIcon.className = 'fa-solid fa-file-lines';
+
+					fileSelectedInfo.style.display = 'flex';
+				} else {
+					resetFileInput();
+				}
+			}
+
+			removeFileBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				resetFileInput();
+			});
+
+			function resetFileInput() {
+				fileInput.value = '';
+				fileSelectedInfo.style.display = 'none';
+			}
+
+			function formatBytes(bytes, decimals = 2) {
+				if (bytes === 0) return '0 Bytes';
+				const k = 1024;
+				const dm = decimals < 0 ? 0 : decimals;
+				const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+				const i = Math.floor(Math.log(bytes) / Math.log(k));
+				return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+			}
+
+			// --- 3. Error Div Formatting Fix ---
+			// If Thymeleaf renders error, turn standard div into nicely styled alert box
+			const errorDiv = document.querySelector('.error');
+			if (errorDiv && errorDiv.textContent.trim() !== '') {
+				errorDiv.classList.add('error-card', 'text-danger', 'fw-medium');
+				errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation fs-5"></i> <span>${errorDiv.textContent}</span>`;
+			}
+
+			// --- 4. Markdown Textarea Counters & Copy Button ---
+			const markdownArea = document.getElementById('markdownArea');
+			const copyBtn = document.getElementById('copyBtn');
+			const lineCount = document.getElementById('lineCount');
+			const wordCount = document.getElementById('wordCount');
+
+			if (markdownArea) {
+				const updateCounters = () => {
+					const text = markdownArea.value;
+					const lines = text ? text.split('\n').length : 0;
+					const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+					if (lineCount) lineCount.innerHTML = `<i class="fa-solid fa-bars me-1"></i>${lines} Líneas`;
+					if (wordCount) wordCount.innerHTML = `<i class="fa-solid fa-font me-1"></i>${words} Palabras`;
+				};
+
+				markdownArea.addEventListener('input', updateCounters);
+				updateCounters(); // initial count
+
+				// Copy to Clipboard
+				if (copyBtn) {
+					copyBtn.addEventListener('click', () => {
+						markdownArea.select();
+						// execute copy fallback for iframe/cross-browser compatibility
+						try {
+							document.execCommand('copy');
+							showToast('¡Markdown copiado al portapapeles!');
+						} catch (err) {
+							if (navigator.clipboard) {
+								navigator.clipboard.writeText(markdownArea.value)
+									.then(() => showToast('¡Markdown copiado al portapapeles!'))
+									.catch(() => showToast('Error al copiar'));
+							}
+						}
+					});
+				}
+			}
+
+			// Toast Helper
+			function showToast(msg) {
+				const toast = document.getElementById('toast');
+				const toastMsg = document.getElementById('toastMsg');
+				if (toast && toastMsg) {
+					toastMsg.textContent = msg;
+					toast.classList.add('show');
+					setTimeout(() => {
+						toast.classList.remove('show');
+					}, 3000);
+				}
+			}
+		});
+	</script>
 </body>
+
 </html>

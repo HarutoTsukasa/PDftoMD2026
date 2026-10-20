@@ -2,6 +2,7 @@ package com.htx.app.pdftomd.service;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xslf.usermodel.*;
@@ -40,6 +41,22 @@ public class ConversionService {
 	// ---------- PDF ----------
 	private String convertPdf(InputStream in) throws IOException {
 		try (PDDocument doc = Loader.loadPDF(in.readAllBytes())) {
+			// temporal
+		    System.out.println("Páginas: " + doc.getNumberOfPages());
+		    PDPage p0 = doc.getPage(0);
+		    System.out.println("Fuentes en página 1: " + p0.getResources().getFontNames());
+		    System.out.println("XObjects en página 1: " + p0.getResources().getXObjectNames());
+
+		    PDFTextStripper stripperr = new PDFTextStripper();
+		    int conTexto = 0;
+		    for (int p = 1; p <= doc.getNumberOfPages(); p++) {
+		        stripperr.setStartPage(p);
+		        stripperr.setEndPage(p);
+		        String t = stripperr.getText(doc).trim();
+		        if (!t.isEmpty()) conTexto++;
+		    }
+		    System.out.println("Páginas con texto extraíble: " + conTexto + "/" + doc.getNumberOfPages());
+		    // temporal
 			PDFTextStripper stripper = new PDFTextStripper();
 			String text = stripper.getText(doc);
 			return "# Texto extraído del PDF\n\n" + text;
